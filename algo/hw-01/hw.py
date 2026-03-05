@@ -17,6 +17,8 @@ def rotate_array(arr, k):
     k - параметр 
     '''
     n = len(arr)
+    if n == 0:
+        return 
     k = k % n 
     reverse_by_indexes(arr, 0, n - 1) 
     reverse_by_indexes(arr, 0, k - 1) 
@@ -56,17 +58,24 @@ def merge_without_allocations(arr1, arr2):
     '''
     size_1 = len(arr1) 
     size_2 = len(arr2) 
+    if size_2 == 0:
+        return arr1
     right = size_2 - 1
     left = size_1 - size_2 - 1 
     curr_ind = size_1 - 1
-
-    while curr_ind >= 0:
-        if left >= 0 and arr1[left] >= arr2[right]:
+    while left >= 0 and right >= 0:
+        if arr1[left] >= arr2[right]:
             arr1[curr_ind] = arr1[left]
             left -= 1
         else:
-            arr1[curr_ind] = arr2[right] 
-            right -= 1 
+            arr1[curr_ind] = arr2[right]
+            right -= 1
+        curr_ind -= 1
+
+
+    while right >= 0:
+        arr1[curr_ind] = arr2[right]
+        right -= 1
         curr_ind -= 1
     return arr1 
 
@@ -74,12 +83,14 @@ def zeros_ones_sort(arr):
     '''
     Дан массив, содержащий только 0 и 1. Отсортировать массив так, чтобы все нули оказались в начале, а все единицы - в конце. Решение должно быть in-place. 
     '''
+    if len(arr) == 0:
+        return
     left = 0
     right = len(arr) - 1
     while left < right:
-        while arr[left] == 0:
+        while left < right and arr[left] == 0:
             left += 1
-        while arr[right] == 1:
+        while left < right and arr[right] == 1:
             right -= 1
         if left < right: 
             arr[left], arr[right] = arr[right], arr[left] 
@@ -92,20 +103,18 @@ def netherland_flags(arr):
     n = len(arr) 
     left = 0 
     right = n - 1 
-    mid = left + 1
-    while mid < right:
-        while arr[left] == 0:
-            left += 1
-        while arr[mid] == 1:
+    mid = 0
+    while mid <= right:
+        if arr[mid] == 0:
+            arr[mid], arr[left] = arr[left], arr[mid] 
             mid += 1
-        while arr[right] == 2:
-            right -= 1
-        if left < mid and arr[left] == 1 and arr[mid] == 0:
-            arr[left], arr[mid] = arr[mid], arr[left] 
-        if mid < right and arr[mid] == 2 and arr[right] != 2:
+            left += 1
+        elif arr[mid] == 1:
+            mid += 1
+        elif arr[mid] == 2:
             arr[mid], arr[right] = arr[right], arr[mid] 
-        if left < right and arr[left] == 2 and arr[right] == 0:
-            arr[left], arr[right] = arr[right], arr[left]
+            mid += 1
+            right -= 1
     return arr 
 
 def reverse_evens(arr):
@@ -113,12 +122,15 @@ def reverse_evens(arr):
     функция для переноса в начало неотсортированного массива четных чисел. Перераспределение стабильно.  
     '''
     n = len(arr) 
-    index = 0 
-    for i in range(n):
-        if arr[i] % 2 == 0:
-            arr[index], arr[i] = arr[i], arr[index] 
-            index += 1
-    return arr 
+    evens = []
+    odds = []
+    for x in arr:
+        if x % 2 == 0:
+            evens.append(x)
+        else:
+            odds.append(x)
+    arr[:] = evens + odds
+    return arr
 
 def zeros_last(arr):
     '''
@@ -131,10 +143,3 @@ def zeros_last(arr):
             arr[index], arr[i] = arr[i], arr[index]
             index += 1
     return arr
-
-def main():
-    arr = [4, 0, 0, 6, 1, 8, 1, 10, 0] 
-    print(zeros_last(arr)) 
-
-if __name__ == '__main__':
-    main() 
