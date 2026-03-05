@@ -1,4 +1,3 @@
-import pytest
 from hw import (
     reverse_by_indexes,
     rotate_array,
