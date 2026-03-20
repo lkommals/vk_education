@@ -34,6 +34,11 @@ class Stack:
 
     def __getitem__(self, index):
         return self._data[index]
+    
+    def __eq__(self, other):
+        if not isinstance(other, Stack):
+            return False 
+        return self._data == other._data 
 
     def peek(self):
         if len(self) == 0:
@@ -49,10 +54,8 @@ class Stack:
         return self._data.pop()
 
     def __enter__(self):
-        self._len_at_enter = len(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        while len(self) > self._len_at_enter:
-            self.pop()
+        self._data.clear() 
         return False
