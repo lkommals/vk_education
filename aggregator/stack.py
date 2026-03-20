@@ -26,6 +26,15 @@ class Stack:
         stackStr = ', '.join(repr(x) for x in self._data)
         return f'Stack([{stackStr}])'
 
+    def __iter__(self):
+        return iter(self._data)
+
+    def __contains__(self, key):
+        return key in self._data
+
+    def __getitem__(self, index):
+        return self._data[index]
+
     def peek(self):
         if len(self) == 0:
             raise StackIsEmpty("Stack is empty!")
