@@ -7,20 +7,37 @@ public class Main {
     static List<User> users = new ArrayList<>();
 
     public static void main(String[] args) {
+        FileService fileService = new FileService("history.txt");
+
+        List<String> savedCommands = fileService.readCommands();
+        for (String cmd : savedCommands) {
+            if (cmd.startsWith("user ") || cmd.startsWith("job ")) {
+                parseLine(cmd);
+            }
+        }
+
         Scanner scanner = new Scanner(System.in);
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            if (line == null) break;
-            line = line.trim();
-            if (line.isEmpty()) continue;
+            if (line.isEmpty()) continue; 
 
             if (line.equals("exit")) {
                 scanner.close();
                 System.exit(0);
             }
 
+            if (line.equals("history")) {
+                List<String> commands = fileService.readCommands();
+                for (String cmd : commands) {
+                    System.out.println(cmd);
+                }
+                fileService.saveCmd(line); 
+                continue;
+            }
+
             parseLine(line);
+            fileService.saveCmd(line);
         }
 
         scanner.close();
@@ -29,7 +46,6 @@ public class Main {
     private static void parseLine(String line) {
         String[] tokens = line.split(" ");
         String cmd = tokens[0];
-
         switch (cmd) {
             case "user":
                 createUser(tokens);
