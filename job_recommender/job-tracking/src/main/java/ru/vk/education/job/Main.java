@@ -1,6 +1,7 @@
 package ru.vk.education.job;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     static List<Job> jobs = new ArrayList<>();
@@ -20,7 +21,7 @@ public class Main {
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            if (line.isEmpty()) continue; 
+            if (line.isEmpty()) continue;
 
             if (line.equals("exit")) {
                 scanner.close();
@@ -32,7 +33,7 @@ public class Main {
                 for (String cmd : commands) {
                     System.out.println(cmd);
                 }
-                fileService.saveCmd(line); 
+                fileService.saveCmd(line);
                 continue;
             }
 
@@ -64,9 +65,105 @@ public class Main {
                     suggest(tokens[1]);
                 }
                 break;
+            case "stat":
+                if (tokens.length >= 2) {
+                    processStat(Arrays.copyOfRange(tokens, 1, tokens.length));
+                }
+                break;
             default:
                 break;
         }
+    }
+    
+    private static void processStat(String[] args) {
+        if (args.length < 2) return;
+        String option = args[0];
+        String value = args[1];
+
+        switch (option) {
+            case "--exp":
+                try {
+                    int expThreshold = Integer.parseInt(value);
+                    statExp(expThreshold);
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid number for --exp");
+                }
+                break;
+            case "--match":
+                try {
+                    int matchThreshold = Integer.parseInt(value);
+                    statMatch(matchThreshold);
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid number for --match");
+                }
+                break;
+            case "--top-skills":
+                try {
+                    int topN = Integer.parseInt(value);
+                    statTopSkills(topN);
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid number for --top-skills");
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static void statExp(int minExp) {
+        jobs.stream()
+                .filter(job -> job.getExperience() >= minExp)
+                .sorted(Comparator.comparing(Job::getName))
+                .forEach(System.out::println);
+    }
+
+    private static void statMatch(int minMatches) {
+        users.stream()
+                .filter(user -> countMatches(user) >= minMatches)
+                .sorted(Comparator.comparing(User::getName))
+                .forEach(System.out::println);
+    }
+
+    private static void statTopSkills(int topN) {
+        if (topN <= 0) return;
+
+        Map<Skill, Long> freq = users.stream()
+                .flatMap(user -> user.getSkills().stream())
+                .collect(Collectors.groupingBy(skill -> skill, Collectors.counting()));
+
+        List<Skill> topSkills = freq.entrySet().stream()
+                .sorted(Map.Entry.<Skill, Long>comparingByValue(Comparator.reverseOrder())
+                        .thenComparing(entry -> entry.getKey().getName()))
+                .limit(topN)
+                .map(Map.Entry::getKey)
+                .sorted(Comparator.comparing(Skill::getName))
+                .collect(Collectors.toList());
+
+        topSkills.forEach(System.out::println);
+    }
+
+    private static long countMatches(User user) {
+        return jobs.stream()
+                .filter(job -> isMatch(user, job))
+                .count();
+    }
+
+    private static boolean isMatch(User user, Job job) {
+        Set<String> userSkills = user.getSkills().stream()
+                .map(Skill::getName)
+                .collect(Collectors.toSet());
+        Set<String> jobTags = job.getTags().stream()
+                .map(Skill::getName)
+                .collect(Collectors.toSet());
+
+        long common = userSkills.stream().filter(jobTags::contains).count();
+        if (common == 0) return false;
+
+        int score = (int) common;
+        if (user.getExperience() < job.getExperience()) {
+            score = score / 2;
+        }
+        return score > 0;
     }
 
     private static void createUser(String[] tokens) {
@@ -78,7 +175,7 @@ public class Main {
         }
 
         int experience = 0;
-        Set<String> skillsSet = new TreeSet<>(); 
+        Set<String> skillsSet = new TreeSet<>();
 
         for (int i = 2; i < tokens.length; i++) {
             String[] kv = tokens[i].split("=", 2);
@@ -178,7 +275,7 @@ public class Main {
                 if (jobTags.contains(us)) common++;
             }
 
-            if (common == 0) continue; 
+            if (common == 0) continue;
 
             int score = common;
             if (user.getExperience() < job.getExperience()) {
